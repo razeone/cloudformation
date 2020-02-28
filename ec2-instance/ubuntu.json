@@ -1,0 +1,54 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "AWS CloudFormation Sample Template EC2InstanceWithSecurityGroupSample: Create an Amazon EC2 instance running the Amazon Linux AMI. The AMI is chosen based on the region in which the stack is run. This example creates an EC2 security group for the instance to give you SSH access. **WARNING** This template creates an Amazon EC2 instance. You will be billed for the AWS resources used if you create a stack from this template.",
+    "Parameters": {
+      "KeyName": {
+        "Description": "Name of an existing Key Pair to enable SSH Access to the instance",
+        "Type": "AWS::EC2::KeyPair::KeyName",
+        "ConstraintDescription": "Must be the name of an existing key pair name"
+      }
+    },
+    "Resources": {
+      "EC2Instance": {
+        "Type": "AWS::EC2::Instance",
+        "Properties": {
+          "InstanceType": "t2.micro",
+          "SecurityGroups": [
+            {
+              "Ref": "InstanceSecurityGroup"
+            }
+          ],
+          "KeyName": {
+            "Ref": "KeyName"
+          },
+          "ImageId": "ami-08bc77a2c7eb2b1da",
+          "UserData": {
+              "Fn::Base64": { "Fn::Join": ["",[
+                  "#!/bin/bash -xe\n",
+                  "sudo apt-get update -y\n",
+                  "sudo apt-get install apache2 -y\n",
+                  "sudo apt-get install mariadb-server mariadb-client -y\n",
+                  "sudo apt install php libapache2-mod-php php-common php-mbstring php-xmlrpc php-soap php-gd php-xml php-intl php-mysql php-cli php-zip php-curl -y\n",
+                  "sudo systemctl start mysql.service && sudo systemctl enable mysql.service\n",
+                  "sudo systemctl start apache2.service && sudo systemctl enable apache2.service\n",
+                  "echo '<?php phpinfo(); ?>' > /var/www/html/phpinfo.php\n"
+              ]]}
+          }
+        }
+      },
+      "InstanceSecurityGroup": {
+        "Type": "AWS::EC2::SecurityGroup",
+        "Properties": {
+          "GroupDescription": "Enable HTTP access to everyone",
+          "SecurityGroupIngress": [
+            {
+              "IpProtocol": "tcp",
+              "FromPort": "80",
+              "ToPort": "80",
+              "CidrIp": "0.0.0.0/0"
+            }
+          ]
+        }
+      }
+    }
+  }
